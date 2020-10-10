@@ -1,15 +1,37 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import cytoscape from 'cytoscape';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
+const API = 'http://localhost:5000/api';
+
 
 const NoPostsPage = () => {
   let cy: any = null;
+  let [loading, setLoading] = useState(false);
+
+  const fetchData = () => {
+    setLoading(true);
+    console.log(window.origin);
+    fetch(`${API}/graph`, {
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.log(err);
+        setLoading(false);
+      })
+  };
 
 
   useEffect(() => {
     cy = cytoscape({
       container: document.getElementById('cy'),
-      elements: [{data: {id: 'a'}}]
+      elements: [{data: {id: 'a'}},{data: {id: 'b'}}]
     });
+    cy.layout({name: 'breadthfirst'}).run();
   }, [] );
 
 
@@ -23,8 +45,12 @@ const NoPostsPage = () => {
 
   return(
     <>
+      {loading &&
+      <div className={"loading-spinner"}>
+          <CircularProgress color="secondary" size={50}/>
+      </div>}
       <button onClick={addElem}>Add elements</button>
-      <button onClick={() => console.log(cy)}>Log</button>
+      <button onClick={() => fetchData()}>Log</button>
       <div id="cy" className={'cytoscape__div'} onClick={(e) => console.log(e.screenX, e.screenY)}/>
     </>
   );
