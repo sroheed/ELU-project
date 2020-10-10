@@ -10,6 +10,7 @@ const Router = () => {
         <Route path={"/"} component={Menu}/>
         <Switch>
           <Route path="/" exact component={HomePage}/>
+          <Route path="/graph-without-posts" exact component={HomePage}/>
         </Switch>
       </BrowserRouter>
     </>
