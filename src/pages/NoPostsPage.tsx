@@ -2,8 +2,6 @@ import React, {useEffect, useState} from 'react';
 import cytoscape from 'cytoscape';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-const API = 'http://localhost:5000/api';
-
 
 const NoPostsPage = () => {
   let cy: any = null;
@@ -11,8 +9,7 @@ const NoPostsPage = () => {
 
   const fetchData = () => {
     setLoading(true);
-    console.log(window.origin);
-    fetch(`${API}/graph`, {
+    fetch(`/api/graph`, {
     })
       .then(res => res.json())
       .then(data => {
