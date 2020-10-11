@@ -5,7 +5,7 @@ from flask_cors import CORS, cross_origin
 app = Flask(__name__, static_folder="../build", static_url_path="/")
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-app.config["DEBUG"] = True
+#app.config["DEBUG"] = True
 
 @app.route('/')
 def index():
@@ -26,7 +26,7 @@ def api_id():
     return jsonify(id)
 
 
-#if __name__ == "__main__":
-#    app.run(host='0.0.0.0', debug=False, port=os.environ.get('PORT', 80))
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', debug=False, port=os.environ.get('PORT', 80))
 
-app.run()
+#app.run()
