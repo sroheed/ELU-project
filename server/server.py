@@ -11,6 +11,10 @@ app.config["DEBUG"] = True
 def index():
     return app.send_static_file("index.html")
 
+@app.route('/graph-without-posts')
+def graph_without_posts():
+    return app.send_static_file("index.html")
+
 @app.route('/api/graph', methods=['GET'])
 def home():
     jsonResp = {'jack': 4098, 'sape': 4139}
