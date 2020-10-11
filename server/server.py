@@ -1,4 +1,5 @@
 import os
+from scrape import Scrape
 from flask import request, jsonify, Flask
 from flask_cors import CORS, cross_origin
 app = Flask(__name__, static_folder="../build", static_url_path="/")
@@ -16,21 +17,22 @@ def graph_without_posts():
 
 @app.route('/api/graph', methods=['GET'])
 def home():
-    jsonResp = {'jack': 4098, 'sape': 4139}
-    return jsonify(jsonResp)
-
-@app.route('/api/data', methods=['GET'])
-def api_id():
-    if 'id' in request.args:
-            id = int(request.args['id'])
+    if 'subreddit' and 'post_count' in request.args:
+        subreddit = str(request.args['subreddit'])
+        post_count = int(request.args['post_count'])
+        #months_old = int(request.args['months_old'])
+        months_old = 1
     else:
-            return "Error: No id field provided. Please specify an id."
+        return jsonify({"message": "Invalid request", 'code': 400})
 
-    return jsonify(id)
-
+    scrape_instance = Scrape(subreddit, months_old, post_count)
+    subreddit_exists = scrape_instance.sub_exists()
+    if(subreddit_exists):
+        return_data = scrape_instance.get_data()
+        return jsonify({"data": return_data, 'code': 200})
+    else:
+        return jsonify({"message": "Subreddit does not exist", 'code': 400})
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
-
-#app.run()
+    app.run(host='localhost', port=port)
