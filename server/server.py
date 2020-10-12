@@ -15,6 +15,10 @@ def index():
 def graph_without_posts():
     return app.send_static_file("index.html")
 
+@app.route('/info')
+def info():
+    return app.send_static_file("index.html")
+
 @app.route('/api/graph', methods=['GET'])
 def home():
     if 'subreddit' and 'post_count' in request.args:

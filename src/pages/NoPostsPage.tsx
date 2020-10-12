@@ -9,25 +9,35 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import stc from 'string-to-color';
 import {invertColor} from "../utils/invertColor";
+import Box from '@material-ui/core/Box';
+import NodeCard from "../components/NodeCard";
+
 
 const NoPostsPage = () => {
   const cy: any = useRef();
   const firstLoad = useRef(true);
   const [loading, setLoading] = useState(false);
-  const [subredditName, setSubredditName] =  useState("");
+  const [subredditName, setSubredditName] = useState("");
   const [postCount, setPostCount] = useState(10);
+  const [nodeChecked, setNodeChecked] = useState("node1");
+  const [currentNodeData, setCurrentNodeData] = useState({
+    id: "",
+    type: "",
+    degree: 0,
+    edgesSource: null,
+    edgesTarget: null,
+  });
 
   const fetchData = () => {
-    if(!subredditName) return;
+    if (!subredditName) return;
     setLoading(true);
-    fetch(`/api/graph?subreddit=${subredditName}&post_count=${postCount}`, {
-    })
+    fetch(`/api/graph?subreddit=${subredditName}&post_count=${postCount}`, {})
       .then(res => res.json())
       .then(doc => {
-        if(doc.code === 200){
+        if (doc.code === 200) {
           appendNodes(doc.data);
           localStorage.setItem(doc.data[0], JSON.stringify(doc.data));
-        }else{
+        } else {
           console.log(doc.message)
         }
         setLoading(false);
@@ -40,10 +50,12 @@ const NoPostsPage = () => {
 
 
   useEffect(() => {
-    if(firstLoad.current){
-        cy.current = cytoscape({
-          container: document.getElementById('cy'),
-        });
+    if (firstLoad.current) {
+      cy.current = cytoscape({
+        container: document.getElementById('cy'),
+      });
+      cy.current.on('click', 'node', handleNodeClick);
+      cy.current.on('click', 'edge', handleEdgeClick);
       firstLoad.current = false;
       loadFromStorage();
     }
@@ -58,26 +70,26 @@ const NoPostsPage = () => {
 
   const appendNodes = (posts: any[]) => {
     const subredditName = posts[0];
-    addNode(subredditName);
+    addNode(subredditName, "subreddit");
     colorNode(subredditName, invertColor(stc(subredditName)));
-    for(let i=1; i<posts.length; i++){
+    for (let i = 1; i < posts.length; i++) {
       const nodeId = posts[i].author;
-      addNode(nodeId);
+      addNode(nodeId, "author");
       colorNode(nodeId, stc(subredditName));
       addEdge(subredditName, nodeId);
     }
     cy.current.layout(options).run();
   };
 
-  const addNode = (id: string) => {
+  const addNode = (id: string, type: string) => {
     cy.current.add([
-      { group: 'nodes', data: { id: id } },
+      {group: 'nodes', data: {id: id, type: type}},
     ]);
   };
 
   const addEdge = (source: string, target: string) => {
     cy.current.add([
-      { group: 'edges', data: { id: source + "__" + target, source: source, target: target } }
+      {group: 'edges', data: {id: source + "__" + target, source: source, target: target}}
     ]);
   };
 
@@ -85,7 +97,31 @@ const NoPostsPage = () => {
     cy.current.getElementById(nodeId).style("background-color", color);
   };
 
-  return(
+  const handleNodeClick = (e: any) => {
+    const node = e.target; // event target
+    const currentNode = {
+      id: node.id(),
+      type: node.data().type,
+      degree: node.degree(),
+      edgesSource: cy.current.edges(`[source = "${node.id()}"]`),
+      edgesTarget: cy.current.edges(`[target = "${node.id()}"]`),
+    };
+    setCurrentNodeData(currentNode);
+  };
+
+  const handleEdgeClick = (e: any) => {
+    const edge = e.target; // event target
+    const currentEdge = {
+      id: edge.id(),
+    };
+    console.log(currentEdge);
+  };
+
+  const handleCheckbox = (nodeId: string) => {
+    setNodeChecked(nodeId);
+  };
+
+  return (
     <>
       {loading &&
       <div className={"loading-spinner"}>
@@ -93,7 +129,7 @@ const NoPostsPage = () => {
       </div>}
       <div className={"scrape-controls__div"}>
         <Grid container spacing={2} alignItems={"baseline"}>
-          <Grid item xs={3} >
+          <Grid item xs={3}>
             <Typography id="slider" variant={"body2"}>
               Post Count
             </Typography>
@@ -116,19 +152,26 @@ const NoPostsPage = () => {
               />
             </div>
           </Grid>
-          <Grid item xs={1}>
+          <Grid item xs={2}>
             <div className={"line-high"}>
               <Button variant="contained" color="primary" onClick={fetchData}>
-                Generate
+                Generate Subreddit
               </Button>
+            </div>
+          </Grid>
+          <Grid item xs={2}>
+            <div className={"line-high"}>
               <Button variant="contained" color="secondary" onClick={() => localStorage.clear()}>
-                Delete
+                Delete Graph
               </Button>
             </div>
           </Grid>
         </Grid>
       </div>
-      <div id="cy" className={'cytoscape__div'} />
+      <Box display="flex" flexWrap="nowrap">
+        <div id="cy" className={'cytoscape__div'}/>
+        <NodeCard node={currentNodeData} handleCheckbox={handleCheckbox} nodeChecked={nodeChecked}/>
+      </Box>
     </>
   );
 };
