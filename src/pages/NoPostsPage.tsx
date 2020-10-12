@@ -186,6 +186,7 @@ const NoPostsPage = () => {
           nodeChecked={nodeChecked}
           removeNode={removeNode}
           addEdge={addEdge}
+          cy={cy.current}
         />
       </Box>
     </>

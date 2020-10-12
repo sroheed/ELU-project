@@ -25,10 +25,12 @@ interface NodeCardProps {
   addEdge: (source: string, target: string) => void;
   resetEdge: () => void;
   nodeChecked: string;
+  cy: any;
 }
 
 const NodeCard = (props: NodeCardProps) => {
-  const {node, handleCheckbox, nodeChecked, removeNode, addEdge, edge, resetEdge} = props;
+  const {node, handleCheckbox, nodeChecked,
+    removeNode, addEdge, edge, resetEdge, cy} = props;
   const [firstNode, setFirstNode] = useState({
     name: "node1",
     node: {
@@ -49,6 +51,11 @@ const NodeCard = (props: NodeCardProps) => {
       edgesTarget: null,
     }
   });
+  const [connectInfo, setConnectInfo] = useState({
+    connected: false,
+    distance: 0
+  });
+  const [path, setPath] = useState<any[]>([]);
 
   useEffect(() => {
     if(nodeChecked === "node1"){
@@ -93,6 +100,35 @@ const NodeCard = (props: NodeCardProps) => {
     }
   };
 
+  useEffect(() => {
+    search();
+  }, [firstNode, secondNode]);
+
+  const search = () => {
+    console.log("eyy");
+    if(firstNode.node.id && secondNode.node.id){
+      let distance = 0;
+      const searchFloyd = cy.elements().floydWarshall();
+      const path = searchFloyd.path('#'+firstNode.node.id, '#'+secondNode.node.id);
+      setPath(path);
+      for(let i = 0; i<path.length; i+=2){
+        distance++;
+      }
+      setConnectInfo({
+        connected: distance > 0,
+        distance: distance - 1
+      });
+    }
+  };
+
+  const colorPath = () => {
+    if(path.length > 1){
+      for(let i = 0; i<path.length; i+=2){
+        cy.nodes(`[id='${path[i].id() as string}']`).style('background-color', "green");
+      }
+    }
+  };
+
   return (
     <>
       <div className={"details"}>
@@ -103,6 +139,7 @@ const NodeCard = (props: NodeCardProps) => {
             onClick={() => {
               removeNode(edge);
               resetEdge();
+              search();
             }
             }>
             Remove Edge
@@ -181,17 +218,37 @@ const NodeCard = (props: NodeCardProps) => {
                     </Grid>
                     <Grid item xs={6}>
                         <Typography variant={"body2"}>
-                            Response
+                          {connectInfo.connected.toString()}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant={"body2"}>
+                            Distance:
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant={"body2"}>
+                          {connectInfo.distance}
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
-                        <Box display="flex" flexWrap="nowrap" justifyContent={"left"}>
+                        <Box display="flex" flexWrap="nowrap" justifyContent={"space-between"}>
                             <Button
                                 variant="contained"
                                 color="primary"
                                 disableElevation
-                                onClick={() => addEdge(firstNode.node.id, secondNode.node.id)}>
+                                onClick={() => {
+                                  addEdge(firstNode.node.id, secondNode.node.id);
+                                  search();
+                                }}>
                                 Connect
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                disableElevation
+                                onClick={colorPath}>
+                                Color Path
                             </Button>
                         </Box>
                     </Grid>
