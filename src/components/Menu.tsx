@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback} from 'react';
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { links, getPathName } from '../utils/Links';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
@@ -34,12 +34,14 @@ const Menu = () => {
   const ref = useRef(null);
   const ANIMATION_TIME = 255; // seconds
   const classes = useStyles();
+  const history = useHistory();
 
   const clickListener = useCallback(
     (e: MouseEvent) => {
       if (!(ref.current! as any).contains(e.target)) {
         if(menuBool.current){
           toggleMenu(false);
+          console.log("clicked")
         }
       }
     },
@@ -77,10 +79,9 @@ const Menu = () => {
             <React.Fragment key={item.name}>
               <ListItem button onClick={() => {
                 toggleMenu(false);
+                history.push(item.path);
               }}>
-                <Link to={item.path} className={"link"}>
-                  <ListItemText primary={item.name} />
-                </Link>
+              <ListItemText primary={item.name} />
               </ListItem>
               <Divider />
             </React.Fragment>

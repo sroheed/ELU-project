@@ -6,6 +6,10 @@ export const links = [
   {
     path: '/graph-without-posts',
     name: 'Graph Without Posts',
+  },
+  {
+    path: '/info',
+    name: 'Info',
   }
 ];
 
@@ -15,5 +19,7 @@ export const getPathName = (pathName: string) => {
       return "Home Page";
     case "/graph-without-posts":
       return "Graph Without Posts";
+    case "/info":
+      return "Information";
   }
 };

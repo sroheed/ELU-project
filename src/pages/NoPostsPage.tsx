@@ -26,6 +26,7 @@ const NoPostsPage = () => {
       .then(doc => {
         if(doc.code === 200){
           appendNodes(doc.data);
+          localStorage.setItem(doc.data[0], JSON.stringify(doc.data));
         }else{
           console.log(doc.message)
         }
@@ -40,13 +41,20 @@ const NoPostsPage = () => {
 
   useEffect(() => {
     if(firstLoad.current){
-      cy.current = cytoscape({
-        container: document.getElementById('cy'),
-      });
+        cy.current = cytoscape({
+          container: document.getElementById('cy'),
+        });
       firstLoad.current = false;
+      loadFromStorage();
     }
   });
 
+  const loadFromStorage = () => {
+    const postsStorage = Object.entries(localStorage);
+    postsStorage.forEach((posts) => {
+      appendNodes(JSON.parse(posts[1]));
+    });
+  };
 
   const appendNodes = (posts: any[]) => {
     const subredditName = posts[0];
@@ -112,6 +120,9 @@ const NoPostsPage = () => {
             <div className={"line-high"}>
               <Button variant="contained" color="primary" onClick={fetchData}>
                 Generate
+              </Button>
+              <Button variant="contained" color="secondary" onClick={() => localStorage.clear()}>
+                Delete
               </Button>
             </div>
           </Grid>
