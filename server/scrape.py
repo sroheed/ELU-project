@@ -1,15 +1,18 @@
+import os
 import praw # $ pip install praw
-import pandas as pd # $ pip install pandas
 from datetime import datetime # $ pip install DateTime
 from dateutil import tz # $ pip install python-dateutil
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv # pip install python-dotenv
+load_dotenv()
+
 
 class Scrape:
 
     #Settings
-    my_client_id = "NeDNS8V0o0gRZw"
-    my_client_secret = "bXGwkc8VqbrBF4Skl6hStzVdBgk"
-    my_user_agent = "ELU_Project"
+    my_client_id = str(os.getenv("REDDIT_CLIENT_ID"))
+    my_client_secret = str(os.getenv("REDDIT_CLIENT_SECRET"))
+    my_user_agent = str(os.getenv("REDDIT_USER_AGENT"))
 
     def __init__(self, subreddit_name, months_old, post_count):
         self.SUBREDDIT_NAME = subreddit_name
