@@ -7,6 +7,8 @@ import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
+import stc from 'string-to-color';
+import {invertColor} from "../utils/invertColor";
 
 const NoPostsPage = () => {
   const cy: any = useRef();
@@ -49,23 +51,30 @@ const NoPostsPage = () => {
   const appendNodes = (posts: any[]) => {
     const subredditName = posts[0];
     addNode(subredditName);
+    colorNode(subredditName, invertColor(stc(subredditName)));
     for(let i=1; i<posts.length; i++){
-      addNode(posts[i].author);
-      addEdge(subredditName, posts[i].author);
+      const nodeId = posts[i].author;
+      addNode(nodeId);
+      colorNode(nodeId, stc(subredditName));
+      addEdge(subredditName, nodeId);
     }
+    cy.current.layout(options).run();
   };
 
   const addNode = (id: string) => {
     cy.current.add([
       { group: 'nodes', data: { id: id } },
     ]);
-    cy.current.layout(options).run();
   };
 
   const addEdge = (source: string, target: string) => {
     cy.current.add([
       { group: 'edges', data: { id: source + "__" + target, source: source, target: target } }
     ]);
+  };
+
+  const colorNode = (nodeId: string, color: string) => {
+    cy.current.getElementById(nodeId).style("background-color", color);
   };
 
   return(
