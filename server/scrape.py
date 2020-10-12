@@ -24,7 +24,6 @@ class Scrape:
 
     def configure_reddit(self):
         # Initialise the reddit instance with correct information
-        # TODO - Later add the details to dot-env file
         self.reddit = praw.Reddit(
             client_id=self.my_client_id,
             client_secret=self.my_client_secret,
