@@ -15,7 +15,7 @@ class Scrape:
         self.SUBREDDIT_NAME = subreddit_name
         self.MONTH_NUM = months_old
         self.POST_COUNT = int(post_count)
-        self.posts = []
+        self.posts = [subreddit_name]
         self.configure_reddit()
         self.configure_datetime()
 
@@ -56,7 +56,7 @@ class Scrape:
                   if(post_utc < self.time_limit):
                        #print("   Further posts are too old")
                        break
-                  self.posts.append({'subreddit': self.SUBREDDIT_NAME, 'postTitle': post.title, 'author': post.author.name})
+                  self.posts.append({'postTitle': post.title, 'author': post.author.name})
              except:
                   #print("   cant fetch data for post: " + post.title)
                   pass

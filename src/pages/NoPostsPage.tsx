@@ -1,5 +1,6 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import cytoscape from 'cytoscape';
+import {options} from '../utils/cytoscapeOptions';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Slider from '@material-ui/core/Slider';
 import Typography from '@material-ui/core/Typography';
@@ -8,7 +9,8 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 
 const NoPostsPage = () => {
-  let cy: any = null;
+  const cy: any = useRef();
+  const firstLoad = useRef(true);
   const [loading, setLoading] = useState(false);
   const [subredditName, setSubredditName] =  useState("");
   const [postCount, setPostCount] = useState(10);
@@ -19,13 +21,12 @@ const NoPostsPage = () => {
     fetch(`/api/graph?subreddit=${subredditName}&post_count=${postCount}`, {
     })
       .then(res => res.json())
-      .then(data => {
-        if(data.code === 200){
-          console.log(data.data);
+      .then(doc => {
+        if(doc.code === 200){
+          appendNodes(doc.data);
         }else{
-          console.log(data.message)
+          console.log(doc.message)
         }
-
         setLoading(false);
       })
       .catch(err => {
@@ -36,21 +37,36 @@ const NoPostsPage = () => {
 
 
   useEffect(() => {
-    cy = cytoscape({
-      container: document.getElementById('cy'),
-      elements: [{data: {id: 'a'}},{data: {id: 'b'}}]
-    });
-    cy.layout({name: 'breadthfirst'}).run();
-  }, [] );
+    if(firstLoad.current){
+      cy.current = cytoscape({
+        container: document.getElementById('cy'),
+      });
+      firstLoad.current = false;
+    }
+  });
 
 
-  const addElem = () => {
-    cy.add([
-      { group: 'nodes', data: { id: 'n0' } },
-      { group: 'nodes', data: { id: 'n1' } },
-    ]);
+  const appendNodes = (posts: any[]) => {
+    const subredditName = posts[0];
+    addNode(subredditName);
+    for(let i=1; i<posts.length; i++){
+      addNode(posts[i].author);
+      addEdge(subredditName, posts[i].author);
+    }
   };
 
+  const addNode = (id: string) => {
+    cy.current.add([
+      { group: 'nodes', data: { id: id } },
+    ]);
+    cy.current.layout(options).run();
+  };
+
+  const addEdge = (source: string, target: string) => {
+    cy.current.add([
+      { group: 'edges', data: { id: source + "__" + target, source: source, target: target } }
+    ]);
+  };
 
   return(
     <>
@@ -92,7 +108,7 @@ const NoPostsPage = () => {
           </Grid>
         </Grid>
       </div>
-      <div id="cy" className={'cytoscape__div'} onClick={(e) => console.log(e.screenX, e.screenY)}/>
+      <div id="cy" className={'cytoscape__div'} />
     </>
   );
 };
