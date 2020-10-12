@@ -6,6 +6,8 @@ import CardHeader from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
+import Button from '@material-ui/core/Button';
+import Box from '@material-ui/core/Box';
 
 interface Node {
   id: string,
@@ -17,12 +19,16 @@ interface Node {
 
 interface NodeCardProps {
   node: Node;
-  handleCheckbox: (nodeId: string) => void
+  edge: string;
+  handleCheckbox: (nodeId: string) => void;
+  removeNode: (id: string) => void;
+  addEdge: (source: string, target: string) => void;
+  resetEdge: () => void;
   nodeChecked: string;
 }
 
 const NodeCard = (props: NodeCardProps) => {
-  const {node, handleCheckbox, nodeChecked} = props;
+  const {node, handleCheckbox, nodeChecked, removeNode, addEdge, edge, resetEdge} = props;
   const [firstNode, setFirstNode] = useState({
     name: "node1",
     node: {
@@ -60,9 +66,48 @@ const NodeCard = (props: NodeCardProps) => {
 
   const nodes = [firstNode, secondNode];
 
+  const removeNodeById = (id: string, nodeName: string) => {
+    removeNode(id);
+    if(nodeName === "node1"){
+      setFirstNode({
+        name: "node1",
+        node: {
+          id: "",
+          type: "",
+          degree: 0,
+          edgesSource: null,
+          edgesTarget: null,
+        }
+      });
+    }else{
+      setSecondNode({
+        name: "node2",
+        node: {
+          id: "",
+          type: "",
+          degree: 0,
+          edgesSource: null,
+          edgesTarget: null,
+        }
+      });
+    }
+  };
+
   return (
     <>
       <div className={"details"}>
+        {edge !== "" && <Button
+            variant="contained"
+            color="secondary"
+            disableElevation
+            onClick={() => {
+              removeNode(edge);
+              resetEdge();
+            }
+            }>
+            Remove Edge
+        </Button>}
+        <br/>
         {nodes.map((item, i) =>
           <React.Fragment key={item.name}>
             <FormControlLabel
@@ -112,12 +157,47 @@ const NodeCard = (props: NodeCardProps) => {
                       {item.node.degree}
                     </Typography>
                   </Grid>
-
+                  <Grid item xs={12}>
+                    <Box display="flex" flexWrap="nowrap" justifyContent={"left"}>
+                      <Button variant="contained" color="secondary" disableElevation onClick={() => removeNodeById(item.node.id, item.name)}>
+                        Delete
+                      </Button>
+                    </Box>
+                  </Grid>
                 </Grid>
               </CardContent>
             </Card>
           </React.Fragment>
         )}
+        <br/>
+        {firstNode.node.id !== "" && secondNode.node.id!=="" && <Card>
+            <CardHeader subheader={`Node 1 > Node 2`}/>
+            <CardContent>
+                <Grid container spacing={3}>
+                    <Grid item xs={6}>
+                        <Typography variant={"body2"}>
+                            Connected:
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant={"body2"}>
+                            Response
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Box display="flex" flexWrap="nowrap" justifyContent={"left"}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                disableElevation
+                                onClick={() => addEdge(firstNode.node.id, secondNode.node.id)}>
+                                Connect
+                            </Button>
+                        </Box>
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>}
       </div>
     </>
   );

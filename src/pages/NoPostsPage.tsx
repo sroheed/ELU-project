@@ -20,6 +20,7 @@ const NoPostsPage = () => {
   const [subredditName, setSubredditName] = useState("");
   const [postCount, setPostCount] = useState(10);
   const [nodeChecked, setNodeChecked] = useState("node1");
+  const [currentEdge, setCurrentEdge] = useState("");
   const [currentNodeData, setCurrentNodeData] = useState({
     id: "",
     type: "",
@@ -87,10 +88,18 @@ const NoPostsPage = () => {
     ]);
   };
 
+  const removeNode = (id: string) => {
+    cy.current.remove(cy.current.$(`#${id}`));
+  };
+
   const addEdge = (source: string, target: string) => {
     cy.current.add([
       {group: 'edges', data: {id: source + "__" + target, source: source, target: target}}
     ]);
+  };
+
+  const resetEdge = () => {
+    setCurrentEdge("");
   };
 
   const colorNode = (nodeId: string, color: string) => {
@@ -107,14 +116,13 @@ const NoPostsPage = () => {
       edgesTarget: cy.current.edges(`[target = "${node.id()}"]`),
     };
     setCurrentNodeData(currentNode);
+    resetEdge();
   };
 
   const handleEdgeClick = (e: any) => {
     const edge = e.target; // event target
-    const currentEdge = {
-      id: edge.id(),
-    };
-    console.log(currentEdge);
+    const currentEdge = edge.id();
+    setCurrentEdge(currentEdge);
   };
 
   const handleCheckbox = (nodeId: string) => {
@@ -170,7 +178,15 @@ const NoPostsPage = () => {
       </div>
       <Box display="flex" flexWrap="nowrap">
         <div id="cy" className={'cytoscape__div'}/>
-        <NodeCard node={currentNodeData} handleCheckbox={handleCheckbox} nodeChecked={nodeChecked}/>
+        <NodeCard
+          node={currentNodeData}
+          edge={currentEdge}
+          resetEdge={resetEdge}
+          handleCheckbox={handleCheckbox}
+          nodeChecked={nodeChecked}
+          removeNode={removeNode}
+          addEdge={addEdge}
+        />
       </Box>
     </>
   );
