@@ -105,7 +105,6 @@ const NodeCard = (props: NodeCardProps) => {
   }, [firstNode, secondNode]);
 
   const search = () => {
-    console.log("eyy");
     if(firstNode.node.id && secondNode.node.id){
       let distance = 0;
       const searchFloyd = cy.elements().floydWarshall();
@@ -123,8 +122,20 @@ const NodeCard = (props: NodeCardProps) => {
 
   const colorPath = () => {
     if(path.length > 1){
+      let previous = "";
       for(let i = 0; i<path.length; i+=2){
         cy.nodes(`[id='${path[i].id() as string}']`).style('background-color', "green");
+        if(previous){
+          cy.edges(`[id = "${previous + '__' + path[i].id()}"]`).style({
+            'width': 3,
+            'line-color': 'green'
+          });
+          cy.edges(`[id = "${path[i].id() + '__' + previous}"]`).style({
+            'width': 3,
+            'line-color': 'green'
+          });
+        }
+        previous = path[i].id();
       }
     }
   };
