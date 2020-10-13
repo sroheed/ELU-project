@@ -60,6 +60,7 @@ const NodeCard = (props: NodeCardProps) => {
   });
   const [path, setPath] = useState<any[]>([]);
   const [savedColors, setSavedColors] = useState<any[]>([]);
+  const [colorPathCb, setColorPathCb] = useState(false);
 
   useEffect(() => {
     if(nodeChecked === "node1"){
@@ -158,6 +159,20 @@ const NodeCard = (props: NodeCardProps) => {
       colorEdge(item.source, item.target, item.color);
     });
   };
+
+  useEffect(() => {
+    console.log(firstNode.node.id, secondNode.node.id);
+    if(colorPathCb){
+      colorPath();
+    }else{
+      undoColors();
+    }
+
+    if(connectInfo.distance === -1){
+      undoColors();
+    }
+
+  }, [colorPathCb, path]);
 
   return (
     <>
@@ -273,13 +288,17 @@ const NodeCard = (props: NodeCardProps) => {
                                 }}>
                                 Connect
                             </Button>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                disableElevation
-                                onClick={colorPath}>
-                                Color Path
-                            </Button>
+                            <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={colorPathCb}
+                                    onChange={() => setColorPathCb(!colorPathCb)}
+                                    name="Multiple Nodes"
+                                    color="primary"
+                                  />
+                                }
+                                label="Color Path"
+                            />
                         </Box>
                     </Grid>
                 </Grid>
