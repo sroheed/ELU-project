@@ -106,6 +106,17 @@ const NoPostsPage = () => {
     cy.current.getElementById(nodeId).style("background-color", color);
   };
 
+  const colorEdge = (sourceId: string, targetId: string, color: string) => {
+    cy.current.getElementById(sourceId + '__' + targetId).style({
+      'width': 3,
+      'line-color': color
+    });
+    cy.current.getElementById(targetId + '__' + sourceId).style({
+      'width': 3,
+      'line-color': color
+    });
+  };
+
   const handleNodeClick = (e: any) => {
     const node = e.target; // event target
     const currentNode = {
@@ -187,6 +198,8 @@ const NoPostsPage = () => {
           removeNode={removeNode}
           addEdge={addEdge}
           cy={cy.current}
+          colorNode={colorNode}
+          colorEdge={colorEdge}
         />
       </Box>
     </>

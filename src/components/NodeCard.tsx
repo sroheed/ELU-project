@@ -26,11 +26,14 @@ interface NodeCardProps {
   resetEdge: () => void;
   nodeChecked: string;
   cy: any;
+  colorNode: (nodeId: string, color: string) => void;
+  colorEdge: (sourceId: string, targetId: string, color: string) => void
 }
 
 const NodeCard = (props: NodeCardProps) => {
   const {node, handleCheckbox, nodeChecked,
-    removeNode, addEdge, edge, resetEdge, cy} = props;
+    removeNode, addEdge, edge,
+    resetEdge, cy, colorNode, colorEdge} = props;
   const [firstNode, setFirstNode] = useState({
     name: "node1",
     node: {
@@ -56,6 +59,7 @@ const NodeCard = (props: NodeCardProps) => {
     distance: 0
   });
   const [path, setPath] = useState<any[]>([]);
+  const [savedColors, setSavedColors] = useState<any[]>([]);
 
   useEffect(() => {
     if(nodeChecked === "node1"){
@@ -122,22 +126,37 @@ const NodeCard = (props: NodeCardProps) => {
 
   const colorPath = () => {
     if(path.length > 1){
+      undoColors();
       let previous = "";
+      let colors = [];
       for(let i = 0; i<path.length; i+=2){
-        cy.nodes(`[id='${path[i].id() as string}']`).style('background-color', "green");
+        colors.push({
+          source: path[i].id(),
+          target: path[i].id(),
+          color: cy.getElementById(path[i].id()).style('background-color')
+        });
+        colorNode(path[i].id(), "green");
         if(previous){
-          cy.edges(`[id = "${previous + '__' + path[i].id()}"]`).style({
-            'width': 3,
-            'line-color': 'green'
-          });
-          cy.edges(`[id = "${path[i].id() + '__' + previous}"]`).style({
-            'width': 3,
-            'line-color': 'green'
+          colorEdge(previous, path[i].id(), "green");
+          colors.push({
+            source: previous,
+            target: path[i].id(),
+            color: "gray"
           });
         }
         previous = path[i].id();
       }
+      setSavedColors(colors);
     }
+  };
+
+  const undoColors = () => {
+    savedColors.forEach(item => {
+      if(item.source === item.target){
+        colorNode(item.source, item.color);
+      }
+      colorEdge(item.source, item.target, item.color);
+    });
   };
 
   return (
