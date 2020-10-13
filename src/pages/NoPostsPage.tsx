@@ -10,12 +10,12 @@ import Button from '@material-ui/core/Button';
 import stc from 'string-to-color';
 import {invertColor} from "../utils/invertColor";
 import Box from '@material-ui/core/Box';
-import NodeCard from "../components/NodeCard";
+import NodeInformation from "../components/NodeInformation";
 
 
 const NoPostsPage = () => {
-  const [cy, setCy]: any = useState(null);
-  const [cyData, setCyData] = useState<any[]>([]);
+  const [cy, setCy] = useState<cytoscape.Core>();
+  const [cyData, setCyData] = useState<string[] | object[]>([]);
   const firstLoad = useRef(true);
   const [loading, setLoading] = useState(false);
   const [subredditName, setSubredditName] = useState("");
@@ -42,6 +42,10 @@ const NoPostsPage = () => {
   };
 
   useEffect(() => {
+    cy && appendData(cyData);
+  });
+
+  useEffect(() => {
     if (firstLoad.current) {
       const cytoScape = cytoscape({
         container: document.getElementById('cy'),
@@ -50,11 +54,7 @@ const NoPostsPage = () => {
       firstLoad.current = false;
       loadFromStorage();
     }
-  });
-
-  useEffect(() => {
-    cy && appendData(cyData);
-  }, [cyData]);
+  }, []);
 
   const loadFromStorage = () => {
     const postsStorage = Object.entries(localStorage);
@@ -75,35 +75,35 @@ const NoPostsPage = () => {
         addEdge(subredditName, nodeId);
       }
     });
-    cy.layout(options).run();
+    cy!.layout(options).run();
   };
 
   const addNode = (id: string, type: string) => {
-    cy.add([
+    cy!.add([
       {group: 'nodes', data: {id: id, type: type}},
     ]);
   };
 
   const addEdge = (source: string, target: string) => {
-    cy.add([
+    cy!.add([
       {group: 'edges', data: {id: source + "__" + target, source: source, target: target}}
     ]);
   };
 
   const removeNodeOrEdge = (id: string) => {
-    cy.remove(cy.$(`#${id}`));
+    cy!.remove(cy!.$(`#${id}`));
   };
 
   const colorNode = (nodeId: string, color: string) => {
-    cy.getElementById(nodeId).style("background-color", color);
+    cy!.getElementById(nodeId).style("background-color", color);
   };
 
   const colorEdge = (sourceId: string, targetId: string, color: string) => {
-    cy.getElementById(sourceId + '__' + targetId).style({
+    cy!.getElementById(sourceId + '__' + targetId).style({
       'width': 3,
       'line-color': color
     });
-    cy.getElementById(targetId + '__' + sourceId).style({
+    cy!.getElementById(targetId + '__' + sourceId).style({
       'width': 3,
       'line-color': color
     });
@@ -111,7 +111,7 @@ const NoPostsPage = () => {
 
   const deleteGraph = () => {
     localStorage.clear();
-    cy.elements().remove();
+    cy!.elements().remove();
   };
 
   return (
@@ -163,7 +163,7 @@ const NoPostsPage = () => {
       </div>
       <Box display="flex" flexWrap="nowrap">
         <div id="cy" className={'cytoscape__div'}/>
-        {!firstLoad.current && <NodeCard
+        {!firstLoad.current && <NodeInformation
             cy={cy}
             removeNodeOrEdge={removeNodeOrEdge}
             addEdge={addEdge}

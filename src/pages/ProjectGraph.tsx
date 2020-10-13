@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import Box from "@material-ui/core/Box";
-import NodeCard from "../components/NodeCard";
+import NodeInformation from "../components/NodeInformation";
 import cytoscape from "cytoscape";
 
 const ProjectGraph = () => {
@@ -52,7 +52,7 @@ const ProjectGraph = () => {
     <>
       <Box display="flex" flexWrap="nowrap">
         <div id="cy" className={'cytoscape__div'}/>
-        {/*<NodeCard*/}
+        {/*<NodeInformation*/}
         {/*  node={currentNodeData}*/}
         {/*  edge={currentEdge}*/}
         {/*  resetEdge={resetEdge}*/}
