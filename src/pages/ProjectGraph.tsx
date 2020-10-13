@@ -2,71 +2,99 @@ import React, {useEffect, useRef, useState} from "react";
 import Box from "@material-ui/core/Box";
 import NodeInformation from "../components/NodeInformation";
 import cytoscape from "cytoscape";
+import {invertColor} from "../utils/invertColor";
+import stc from "string-to-color";
+import {options} from "../utils/cytoscapeOptions";
+import {generateAllData} from "../utils/projectData";
+
 
 const ProjectGraph = () => {
-  const cy: any = useRef();
+  const [cy, setCy] = useState<cytoscape.Core>();
+  const [cyData, setCyData] = useState<string[] | object[]>([]);
   const firstLoad = useRef(true);
-  const [currentEdge, setCurrentEdge] = useState("");
-  const resetEdge = () => {
-    setCurrentEdge("");
-  };
-  const [currentNodeData, setCurrentNodeData] = useState({
-    id: "",
-    type: "",
-    degree: 0,
-    edgesSource: null,
-    edgesTarget: null,
-  });
+
+  useEffect(() => {
+    cy && appendData(cyData);
+  }, [cyData]);
 
   useEffect(() => {
     if (firstLoad.current) {
-      cy.current = cytoscape({
+      const cytoScape = cytoscape({
         container: document.getElementById('cy'),
       });
-      cy.current.on('click', 'node', handleNodeClick);
-      cy.current.on('click', 'edge', handleEdgeClick);
+      setCy(cytoScape);
       firstLoad.current = false;
+      loadProjectData();
     }
-  });
+  }, []);
 
-  const handleNodeClick = (e: any) => {
-    const node = e.target; // event target
-    const currentNode = {
-      id: node.id(),
-      type: node.data().type,
-      degree: node.degree(),
-      edgesSource: cy.current.edges(`[source = "${node.id()}"]`),
-      edgesTarget: cy.current.edges(`[target = "${node.id()}"]`),
-    };
-    setCurrentNodeData(currentNode);
-    resetEdge();
+  const loadProjectData = () => {
+    const data = generateAllData();
+    data.forEach((posts) => {
+      setCyData(oldArray => [...oldArray, posts]);
+    });
   };
 
-  const handleEdgeClick = (e: any) => {
-    const edge = e.target; // event target
-    const currentEdge = edge.id();
-    setCurrentEdge(currentEdge);
+  const appendData = (posts: any[]) => {
+    posts.forEach(post => {
+      const subredditName = post[0];
+      addNode(subredditName, "subreddit");
+      colorNode(subredditName, invertColor(stc(subredditName)));
+      for (let i = 1; i < post.length; i++) {
+        const nodeId = post[i].author;
+        addNode(nodeId, "author");
+        colorNode(nodeId, stc(subredditName));
+        addEdge(subredditName, nodeId);
+      }
+      cy!.layout(options).run();
+    });
+  };
+
+  const addNode = (id: string, type: string) => {
+    cy!.add([
+      {group: 'nodes', data: {id: id, type: type}},
+    ]);
+  };
+
+  const addEdge = (source: string, target: string) => {
+    cy!.add([
+      {group: 'edges', data: {id: source + "__" + target, source: source, target: target}}
+    ]);
+  };
+
+  const removeNodeOrEdge = (id: string) => {
+    cy!.remove(cy!.$(`#${id}`));
+  };
+
+  const colorNode = (nodeId: string, color: string) => {
+    cy!.getElementById(nodeId).style("background-color", color);
+  };
+
+  const colorEdge = (sourceId: string, targetId: string, color: string) => {
+    cy!.getElementById(sourceId + '__' + targetId).style({
+      'width': 3,
+      'line-color': color
+    });
+    cy!.getElementById(targetId + '__' + sourceId).style({
+      'width': 3,
+      'line-color': color
+    });
   };
 
   return (
     <>
       <Box display="flex" flexWrap="nowrap">
         <div id="cy" className={'cytoscape__div'}/>
-        {/*<NodeInformation*/}
-        {/*  node={currentNodeData}*/}
-        {/*  edge={currentEdge}*/}
-        {/*  resetEdge={resetEdge}*/}
-        {/*  handleCheckbox={handleCheckbox}*/}
-        {/*  nodeChecked={nodeChecked}*/}
-        {/*  removeNode={removeNode}*/}
-        {/*  addEdge={addEdge}*/}
-        {/*  cy={cy.current}*/}
-        {/*  colorNode={colorNode}*/}
-        {/*  colorEdge={colorEdge}*/}
-        {/*/>*/}
+        {!firstLoad.current && <NodeInformation
+            cy={cy}
+            removeNodeOrEdge={removeNodeOrEdge}
+            addEdge={addEdge}
+            colorNode={colorNode}
+            colorEdge={colorEdge}
+        />}
       </Box>
     </>
-  )
+  );
 };
 
 export default ProjectGraph;

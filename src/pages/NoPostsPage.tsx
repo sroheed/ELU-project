@@ -43,7 +43,7 @@ const NoPostsPage = () => {
 
   useEffect(() => {
     cy && appendData(cyData);
-  });
+  }, [cyData]);
 
   useEffect(() => {
     if (firstLoad.current) {
@@ -74,8 +74,8 @@ const NoPostsPage = () => {
         colorNode(nodeId, stc(subredditName));
         addEdge(subredditName, nodeId);
       }
+      cy!.layout(options).run();
     });
-    cy!.layout(options).run();
   };
 
   const addNode = (id: string, type: string) => {
