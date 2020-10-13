@@ -41,7 +41,6 @@ const Menu = () => {
       if (!(ref.current! as any).contains(e.target)) {
         if(menuBool.current){
           toggleMenu(false);
-          console.log("clicked")
         }
       }
     },

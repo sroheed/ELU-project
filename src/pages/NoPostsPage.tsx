@@ -120,7 +120,6 @@ const NoPostsPage = () => {
   };
 
   const sizeNodes = () => {
-    console.log("slss");
     cy!.$('node').forEach((node: any) => {
       if(node.data().type !== "subreddit"){
         node.style({
