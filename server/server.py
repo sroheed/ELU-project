@@ -7,16 +7,8 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 #app.config["DEBUG"] = True
 
-@app.route('/')
-def index():
-    return app.send_static_file("index.html")
-
-@app.route('/graph-without-posts')
-def graph_without_posts():
-    return app.send_static_file("index.html")
-
-@app.route('/info')
-def info():
+@app.errorhandler(404)
+def all_routes(e):
     return app.send_static_file("index.html")
 
 @app.route('/api/graph', methods=['GET'])

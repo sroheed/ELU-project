@@ -140,6 +140,11 @@ const NoPostsPage = () => {
     setNodeChecked(nodeId);
   };
 
+  const deleteGraph = () => {
+    localStorage.clear();
+    cy.current.elements().remove();
+  };
+
   return (
     <>
       {loading &&
@@ -180,7 +185,7 @@ const NoPostsPage = () => {
           </Grid>
           <Grid item xs={2}>
             <div className={"line-high"}>
-              <Button variant="contained" color="secondary" onClick={() => localStorage.clear()}>
+              <Button variant="contained" color="secondary" onClick={deleteGraph}>
                 Delete Graph
               </Button>
             </div>
