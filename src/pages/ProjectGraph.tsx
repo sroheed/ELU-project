@@ -2,10 +2,14 @@ import React, {useEffect, useRef, useState} from "react";
 import Box from "@material-ui/core/Box";
 import NodeInformation from "../components/NodeInformation";
 import cytoscape from "cytoscape";
+// @ts-ignore
+import coseBilkent from 'cytoscape-cose-bilkent';
 import {invertColor} from "../utils/invertColor";
 import stc from "string-to-color";
-import {options} from "../utils/cytoscapeOptions";
+import {coseb} from "../utils/cytoscapeOptions";
 import {generateAllData} from "../utils/projectData";
+
+cytoscape.use( coseBilkent );
 
 
 const ProjectGraph = () => {
@@ -46,7 +50,8 @@ const ProjectGraph = () => {
         colorNode(nodeId, stc(subredditName));
         addEdge(subredditName, nodeId);
       }
-      cy!.layout(options).run();
+      cy!.layout(coseb).run();
+      sizeNodes();
     });
   };
 
@@ -78,6 +83,23 @@ const ProjectGraph = () => {
     cy!.getElementById(targetId + '__' + sourceId).style({
       'width': 3,
       'line-color': color
+    });
+  };
+
+  const sizeNodes = () => {
+    console.log("slss");
+    cy!.$('node').forEach((node: any) => {
+      if(node.data().type !== "subreddit"){
+        node.style({
+          width: node.degree() * 20,
+          height: node.degree() * 20
+        });
+      }else{
+        node.style({
+          width: node.degree() / 2,
+          height: node.degree() / 2
+        });
+      }
     });
   };
 

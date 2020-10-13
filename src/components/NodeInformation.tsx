@@ -53,8 +53,8 @@ const NodeInformation = (props: NodeCardProps) => {
   });
 
   useEffect(() => {
-      cy.on('click', 'node', handleNodeClick);
-      cy.on('click', 'edge', handleEdgeClick);
+    cy.on('click', 'node', handleNodeClick);
+    cy.on('click', 'edge', handleEdgeClick);
   }, [cy]);
 
   useEffect(() => {

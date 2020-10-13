@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import cytoscape from 'cytoscape';
-import {options} from '../utils/cytoscapeOptions';
+import {coseb} from "../utils/cytoscapeOptions";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Slider from '@material-ui/core/Slider';
 import Typography from '@material-ui/core/Typography';
@@ -11,6 +11,9 @@ import stc from 'string-to-color';
 import {invertColor} from "../utils/invertColor";
 import Box from '@material-ui/core/Box';
 import NodeInformation from "../components/NodeInformation";
+// @ts-ignore
+import coseBilkent from 'cytoscape-cose-bilkent';
+cytoscape.use( coseBilkent );
 
 
 const NoPostsPage = () => {
@@ -74,7 +77,8 @@ const NoPostsPage = () => {
         colorNode(nodeId, stc(subredditName));
         addEdge(subredditName, nodeId);
       }
-      cy!.layout(options).run();
+      cy!.layout(coseb).run();
+      sizeNodes();
     });
   };
 
@@ -112,6 +116,24 @@ const NoPostsPage = () => {
   const deleteGraph = () => {
     localStorage.clear();
     cy!.elements().remove();
+    setCyData([]);
+  };
+
+  const sizeNodes = () => {
+    console.log("slss");
+    cy!.$('node').forEach((node: any) => {
+      if(node.data().type !== "subreddit"){
+        node.style({
+          width: node.degree() * 20,
+          height: node.degree() * 20
+        });
+      }else{
+        node.style({
+          width: Math.log(node.degree()) * 15,
+          height: Math.log(node.degree()) * 15
+        });
+      }
+    });
   };
 
   return (

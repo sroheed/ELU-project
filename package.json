@@ -27,6 +27,8 @@
     "case-sensitive-paths-webpack-plugin": "2.3.0",
     "css-loader": "3.4.2",
     "cytoscape": "^3.16.2",
+    "cytoscape-cose-bilkent": "^4.1.0",
+    "cytoscape-fcose": "^1.2.3",
     "dotenv": "8.2.0",
     "dotenv-expand": "5.1.0",
     "eslint": "^6.6.0",
