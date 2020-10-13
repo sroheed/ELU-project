@@ -18,22 +18,31 @@ interface Node {
 }
 
 interface NodeCardProps {
-  node: Node;
-  edge: string;
-  handleCheckbox: (nodeId: string) => void;
-  removeNode: (id: string) => void;
-  addEdge: (source: string, target: string) => void;
-  resetEdge: () => void;
-  nodeChecked: string;
   cy: any;
+  addEdge: (source: string, target: string) => void;
+  removeNodeOrEdge: (id: string) => void;
   colorNode: (nodeId: string, color: string) => void;
   colorEdge: (sourceId: string, targetId: string, color: string) => void
 }
 
 const NodeCard = (props: NodeCardProps) => {
-  const {node, handleCheckbox, nodeChecked,
-    removeNode, addEdge, edge,
-    resetEdge, cy, colorNode, colorEdge} = props;
+  const {removeNodeOrEdge, addEdge, cy, colorNode, colorEdge} = props;
+  const [path, setPath] = useState<any[]>([]);
+  const [savedColors, setSavedColors] = useState<any[]>([]);
+  const [colorPathCheckbox, setColorPathCheckbox] = useState(false);
+  const [nodeChecked, setNodeChecked] = useState("node1");
+  const [selectedEdge, setSelectedEdge] = useState("");
+  const [common, setCommon] = useState({
+    connected: false,
+    distance: 0
+  });
+  const [selectedNode, setSelectedNode] = useState({
+    id: "",
+    type: "",
+    degree: 0,
+    edgesSource: null,
+    edgesTarget: null,
+  });
   const [firstNode, setFirstNode] = useState({
     name: "node1",
     node: {
@@ -54,33 +63,76 @@ const NodeCard = (props: NodeCardProps) => {
       edgesTarget: null,
     }
   });
-  const [connectInfo, setConnectInfo] = useState({
-    connected: false,
-    distance: 0
-  });
-  const [path, setPath] = useState<any[]>([]);
-  const [savedColors, setSavedColors] = useState<any[]>([]);
-  const [colorPathCb, setColorPathCb] = useState(false);
 
   useEffect(() => {
-    if(nodeChecked === "node1"){
+      cy.on('click', 'node', handleNodeClick);
+      cy.on('click', 'edge', handleEdgeClick);
+  }, [cy]);
+
+  useEffect(() => {
+    BFSFloyd();
+    resetSelectedEdge();
+  }, [firstNode, secondNode]);
+
+  useEffect(() => {
+    if (colorPathCheckbox) {
+      colorPath();
+    } else {
+      resetColors();
+    }
+    if (common.distance === -1) {
+      resetColors();
+    }
+  }, [colorPathCheckbox, path]);
+
+  useEffect(() => {
+    if (nodeChecked === "node1") {
       setFirstNode({
         name: "node1",
-        node: node
+        node: selectedNode
       })
-    }else{
+    } else {
       setSecondNode({
         name: "node2",
-        node: node
+        node: selectedNode
       })
     }
-  }, [node]);
+  }, [selectedNode]);
 
-  const nodes = [firstNode, secondNode];
+  const resetSelectedEdge = () => {
+    setSelectedEdge("");
+  };
+
+  const handleNodeClick = (e: any) => {
+    const node = e.target;
+    const currentNode = {
+      id: node.id(),
+      type: node.data().type,
+      degree: node.degree(),
+      edgesSource: cy.edges(`[source = "${node.id()}"]`),
+      edgesTarget: cy.edges(`[target = "${node.id()}"]`),
+    };
+    setSelectedNode(currentNode);
+  };
+
+  const handleEdgeClick = (e: any) => {
+    const edge = e.target; // event target
+    const currentEdge = edge.id();
+    setSelectedEdge(currentEdge);
+    console.log("edge click")
+  };
+
+  const handleNodeSelectedCheckbox = (nodeId: string) => {
+    setNodeChecked(nodeId);
+  };
 
   const removeNodeById = (id: string, nodeName: string) => {
-    removeNode(id);
-    if(nodeName === "node1"){
+    removeNodeOrEdge(id);
+    resetNodeValue(nodeName);
+  };
+
+  const resetNodeValue = (nodeName: string) => {
+    if (nodeName === "node1") {
       setFirstNode({
         name: "node1",
         node: {
@@ -91,7 +143,7 @@ const NodeCard = (props: NodeCardProps) => {
           edgesTarget: null,
         }
       });
-    }else{
+    } else {
       setSecondNode({
         name: "node2",
         node: {
@@ -105,20 +157,16 @@ const NodeCard = (props: NodeCardProps) => {
     }
   };
 
-  useEffect(() => {
-    search();
-  }, [firstNode, secondNode]);
-
-  const search = () => {
-    if(firstNode.node.id && secondNode.node.id){
+  const BFSFloyd = () => {
+    if (firstNode.node.id && secondNode.node.id) {
       let distance = 0;
       const searchFloyd = cy.elements().floydWarshall();
-      const path = searchFloyd.path('#'+firstNode.node.id, '#'+secondNode.node.id);
+      const path = searchFloyd.path('#' + firstNode.node.id, '#' + secondNode.node.id);
       setPath(path);
-      for(let i = 0; i<path.length; i+=2){
+      for (let i = 0; i < path.length; i += 2) {
         distance++;
       }
-      setConnectInfo({
+      setCommon({
         connected: distance > 0,
         distance: distance - 1
       });
@@ -126,18 +174,18 @@ const NodeCard = (props: NodeCardProps) => {
   };
 
   const colorPath = () => {
-    if(path.length > 1){
-      undoColors();
+    if (path.length > 1) {
+      resetColors();
       let previous = "";
       let colors = [];
-      for(let i = 0; i<path.length; i+=2){
+      for (let i = 0; i < path.length; i += 2) {
         colors.push({
           source: path[i].id(),
           target: path[i].id(),
           color: cy.getElementById(path[i].id()).style('background-color')
         });
         colorNode(path[i].id(), "green");
-        if(previous){
+        if (previous) {
           colorEdge(previous, path[i].id(), "green");
           colors.push({
             source: previous,
@@ -151,40 +199,28 @@ const NodeCard = (props: NodeCardProps) => {
     }
   };
 
-  const undoColors = () => {
+  const resetColors = () => {
     savedColors.forEach(item => {
-      if(item.source === item.target){
+      if (item.source === item.target) {
         colorNode(item.source, item.color);
       }
       colorEdge(item.source, item.target, item.color);
     });
   };
 
-  useEffect(() => {
-    console.log(firstNode.node.id, secondNode.node.id);
-    if(colorPathCb){
-      colorPath();
-    }else{
-      undoColors();
-    }
-
-    if(connectInfo.distance === -1){
-      undoColors();
-    }
-
-  }, [colorPathCb, path]);
+  const nodes = [firstNode, secondNode];
 
   return (
     <>
       <div className={"details"}>
-        {edge !== "" && <Button
+        {selectedEdge !== "" && <Button
             variant="contained"
             color="secondary"
             disableElevation
             onClick={() => {
-              removeNode(edge);
-              resetEdge();
-              search();
+              removeNodeOrEdge(selectedEdge);
+              resetSelectedEdge();
+              BFSFloyd();
             }
             }>
             Remove Edge
@@ -196,7 +232,7 @@ const NodeCard = (props: NodeCardProps) => {
               control={
                 <Checkbox
                   checked={nodeChecked === item.name}
-                  onChange={() => handleCheckbox(item.name)}
+                  onChange={() => handleNodeSelectedCheckbox(item.name)}
                   name="Multiple Nodes"
                   color="primary"
                 />
@@ -204,7 +240,7 @@ const NodeCard = (props: NodeCardProps) => {
               label="select"
             />
             <Card>
-              <CardHeader subheader={`Node ${i+1} Details`}/>
+              <CardHeader subheader={`Node ${i + 1} Details`}/>
               <CardContent>
                 <Grid container spacing={3}>
                   <Grid item xs={6}>
@@ -241,7 +277,8 @@ const NodeCard = (props: NodeCardProps) => {
                   </Grid>
                   <Grid item xs={12}>
                     <Box display="flex" flexWrap="nowrap" justifyContent={"left"}>
-                      <Button variant="contained" color="secondary" disableElevation onClick={() => removeNodeById(item.node.id, item.name)}>
+                      <Button variant="contained" color="secondary" disableElevation
+                              onClick={() => removeNodeById(item.node.id, item.name)}>
                         Delete
                       </Button>
                     </Box>
@@ -252,7 +289,7 @@ const NodeCard = (props: NodeCardProps) => {
           </React.Fragment>
         )}
         <br/>
-        {firstNode.node.id !== "" && secondNode.node.id!=="" && <Card>
+        {firstNode.node.id !== "" && secondNode.node.id !== "" && <Card>
             <CardHeader subheader={`Node 1 > Node 2`}/>
             <CardContent>
                 <Grid container spacing={3}>
@@ -263,7 +300,7 @@ const NodeCard = (props: NodeCardProps) => {
                     </Grid>
                     <Grid item xs={6}>
                         <Typography variant={"body2"}>
-                          {connectInfo.connected.toString()}
+                          {common.connected.toString()}
                         </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -273,7 +310,7 @@ const NodeCard = (props: NodeCardProps) => {
                     </Grid>
                     <Grid item xs={6}>
                         <Typography variant={"body2"}>
-                          {connectInfo.distance}
+                          {common.distance}
                         </Typography>
                     </Grid>
                     <Grid item xs={12}>
@@ -284,15 +321,15 @@ const NodeCard = (props: NodeCardProps) => {
                                 disableElevation
                                 onClick={() => {
                                   addEdge(firstNode.node.id, secondNode.node.id);
-                                  search();
+                                  BFSFloyd();
                                 }}>
                                 Connect
                             </Button>
                             <FormControlLabel
                                 control={
                                   <Checkbox
-                                    checked={colorPathCb}
-                                    onChange={() => setColorPathCb(!colorPathCb)}
+                                    checked={colorPathCheckbox}
+                                    onChange={() => setColorPathCheckbox(!colorPathCheckbox)}
                                     name="Multiple Nodes"
                                     color="primary"
                                   />
